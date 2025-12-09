@@ -1,19 +1,93 @@
 ﻿@page "/commands"
+@using ComBot_Revamped.Commands
+@using Microsoft.AspNetCore.Html;
+
 @rendermode InteractiveServer
 
-<PageTitle>Counter</PageTitle>
+@attribute [Authorize]
 
-<h1>Counter</h1>
+<PageTitle>Commands</PageTitle>
 
-<p role="status">Current count: @currentCount</p>
+@if (selectedCommand == null)
+{
+    <h1 class="border-bottom">Commands</h1>
+    <div class="d-flex flex-row flex-wrap">
+        @foreach (var command in CommandManager.CommandTypeLookup)
+        {
+            <button class="btn btn-secondary m-1" @onclick="() => { SelectCommand(command.Value); }">
+                @command.Value.Names[0]
+            </button>
+        }
+    </div>
+}
+else
+{
+    <div>
+        <button class="btn btn-secondary mb-2" @onclick="() => { SelectCommand(null); }">Back</button>
+        @if(caughtException != null)
+        {
+            <div class="alert-danger alert">
+                <b>ERROR:</b>
+                <p>@caughtException</p>
+            </div>
+        }
 
-<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
+        <p>COMMAND SELECTED: @selectedCommand.Names[0]</p>
+
+        <EditForm class="align-bottom " Model="args" method="post" FormName="commandForm" OnValidSubmit="SubmitCommand">
+        @for(int i = 0; i < selectedCommand.Arguments.Count; i++)
+        {
+                var b = i;
+                <InputText @bind-Value="args[b]" class="rounded form-floating form-control w-100 mb-2" placeholder="@selectedCommand.Arguments.Values.ToArray()[i]"></InputText>
+        }
+            <button class="btn btn-primary w-100" type="submit">SEND COMMAND</button>
+        </EditForm>
+    </div>
+}
 
 @code {
-    private int currentCount = 0;
+    private Command? selectedCommand { get; set;}
+    internal Exception? caughtException { private get; set; }
 
-    private void IncrementCount()
+    // Normal idiom? Unclear... unikely
+    [SupplyParameterFromForm]
+    private string[] args { get; set; } = new string[0];
+
+    private void SelectCommand(Command? cmd)
     {
-        currentCount++;
+        selectedCommand = cmd;
+        args = new string[cmd != null ? cmd.Arguments.Count : 0];
+        // If you just changed the command; You can't have caught an exception from it.
+        caughtException = null;
+    }
+
+    private async void SubmitCommand()
+    {
+        // Set the caught exception to null to reset state 
+        caughtException = null;
+
+        // A command will always have at least one name. Since they're registered via reflection.
+        var cmdName = selectedCommand.Names[0];
+
+        // Convert it to a list and insert the name as element zero.
+        var argList = args.ToList();
+        argList.Insert(0, cmdName);
+
+        var task = CommandManager.StartCommand(selectedCommand, argList.ToArray());
+        if (task != null) {
+            try {
+                await task;
+            } catch(Exception e)
+            {
+                caughtException = e;
+            }
+
+            // Don't go back a menu if something went wrong
+            if (caughtException == null)
+            {
+                SelectCommand(null);
+            }
+        }
     }
 }
+  

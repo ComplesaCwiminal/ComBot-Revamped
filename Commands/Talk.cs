@@ -22,9 +22,10 @@ namespace ComBot_Revamped
             {
                 i++;
             }
+
             foreach (string argument in args.Skip(2))
             {
-                    if (text == "")
+                if (text == "")
                     {
                         text += argument;
                     }
@@ -33,27 +34,10 @@ namespace ComBot_Revamped
                         text += " " + argument;
                     }
             }
-            try
-            {
                     await Program.restClient.SendMessageAsync(ulong.Parse(args[1]), new MessageProperties
                     {
                         Content = text
                     });
-            }
-            catch (System.NullReferenceException e)
-            {
-                // did you ever notice how none of the argument things are the same?
-                // yeah, me neither...
-                Console.WriteLine("One or more arguments are missing from the command.", true);
-                Console.WriteLine("Stacktrace is: " + e.StackTrace);
-            }
-            catch (System.FormatException e)
-            {
-
-                // Seriously tho
-                Console.WriteLine("The channel ID failed to convert.", true);
-                Console.WriteLine("Stacktrace is: " + e.StackTrace);
-            }
         }
     }
 }

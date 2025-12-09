@@ -9,3 +9,9 @@
     position:absolute;
     z-index:99999;
 }
+
+.login-panel {
+    width: 45%;
+    position:absolute;
+    left:22.5%;
+}

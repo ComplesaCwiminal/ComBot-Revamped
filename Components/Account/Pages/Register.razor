@@ -3,17 +3,20 @@
 @using System.ComponentModel.DataAnnotations
 @using System.Text
 @using System.Text.Encodings.Web
+@using ComBot_Revamped.Components.Layout
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.AspNetCore.WebUtilities
 @using ComBot_Revamped.Data
 
-@inject UserManager<ApplicationUser> UserManager
 @inject IUserStore<ApplicationUser> UserStore
+@inject UserManager<ApplicationUser> UserManager
 @inject SignInManager<ApplicationUser> SignInManager
 @inject IEmailSender<ApplicationUser> EmailSender
 @inject ILogger<Register> Logger
 @inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
+
+@attribute [AllowAnonymous]
 
 <PageTitle>Register</PageTitle>
 
@@ -54,7 +57,7 @@
     </div>
 </div>
 
-@code {
+    @code {
     private IEnumerable<IdentityError>? identityErrors;
 
     [SupplyParameterFromForm]

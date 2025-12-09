@@ -30,6 +30,14 @@
             </div>
             <button type="submit" class="w-100 btn btn-lg btn-primary">Save</button>
         </EditForm>
+
+        <br>
+        <p>Log Out:</p>
+        <form action="Account/Logout" method="post">
+            <AntiforgeryToken />
+            <input type="hidden" name="ReturnUrl" value="" />
+            <button class="btn btn-danger" type="submit">Log Out</button>
+        </form>
     </div>
 </div>
 

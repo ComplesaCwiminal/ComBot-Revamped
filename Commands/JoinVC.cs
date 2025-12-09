@@ -17,7 +17,7 @@ namespace ComBot_Revamped.Commands
 
         public override string[] Names { get; } = { "joinvoicechat", "joinvc", "entervc" };
 
-        public override Dictionary<string, string> Arguments => new Dictionary<string, string> { { "guild", "GUILD" }, { "channel", "CHANNEL" } };
+        public override Dictionary<string, string> Arguments => new Dictionary<string, string> { { "channel", "CHANNEL" } };
 
         public override string Description { get; } = "Enters a voice chat and awaits further instructions";
 
@@ -25,8 +25,7 @@ namespace ComBot_Revamped.Commands
         {
             if (args.Length < 1)
             {
-                Console.WriteLine("Error: Too few arguments.");
-                return;
+                throw new ArgumentNullException("Too few arguments");
             }
             
             try {
@@ -38,7 +37,7 @@ namespace ComBot_Revamped.Commands
                 {
                     await Program.client.UpdateVoiceStateAsync(new VoiceStateProperties(vc.GuildId, null)); 
                 });
-            } catch(ArgumentException ae)
+            } catch(ArgumentException)
             {
                 Console.WriteLine("Channel Invalid!");
             }

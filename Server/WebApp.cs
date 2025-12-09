@@ -48,6 +48,12 @@ namespace ComBot_Revamped.Servers
 
             builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 
+            /*
+            builder.Services.AddAuthorization(options =>
+            {
+            });
+            */
+
             var app = builder.Build();
 
 

@@ -1,4 +1,5 @@
-﻿<!DOCTYPE html>
+﻿@using ComBot_Revamped.Components.Layout
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -14,6 +15,12 @@
 </head>
 
 <body>
+    <AuthorizeView>
+        <NotAuthorized>
+            <LoginPanel></LoginPanel>
+        </NotAuthorized>
+    </AuthorizeView>
+
     <Routes />
     <script src="_framework/blazor.web.js"></script>
 </body>

@@ -31,7 +31,7 @@ namespace ComBot_Revamped
         public static string[] arguments { get; internal set; }
         static string configFile = "Config.ini";
         // The amount of iterations for our pkbdf2
-        static int hashIterations = 16384;
+        static int hashIterations = 65536;
 
         // Used to make swapping how I choose to make password input easier.
         static Func<int, Config?, (string?, Config?)>? passwordProvider;
@@ -50,7 +50,7 @@ namespace ComBot_Revamped
 
             StyleUtils.resetStyle();
 
-            var botRunner = Task.Run(() => { Program.RunBotAsync(args).GetAwaiter().GetResult(); });
+            var botRunner = Program.RunBotAsync(args);
             await botRunner;
         }
 
@@ -143,7 +143,7 @@ namespace ComBot_Revamped
                 string[] CommandSplit = input.Split(' ');
 
                 // Commands are tasks and each run on their own thread.
-                Task? commandTask = CommandManager.RunCommand(CommandSplit[0].ToLower(), CommandSplit);
+                Task? commandTask = CommandManager.StartCommand(CommandSplit[0].ToLower(), CommandSplit);
 
                 // It'll be null if no command was found
                 if (commandTask == null)
@@ -169,7 +169,6 @@ namespace ComBot_Revamped
             string? result = null;
             Config? configObj = null;
 
-
             int input = File.Exists(configFile) ? 1 : 0;
 
             if (input == 1)
@@ -188,7 +187,7 @@ namespace ComBot_Revamped
 
             while (!success && attempts < 5)
             {
-                Config conf;
+                Config? conf = null;
                 if (passwordProvider != null)
                 {
                     (result, conf) = passwordProvider.Invoke(input, configObj);
@@ -199,7 +198,7 @@ namespace ComBot_Revamped
 
                 configObj = conf == null ? configObj : conf;
 
-                    (success, token) = TryBotLogin(configObj, result ?? "");
+                (success, token) = TryBotLogin(configObj, result ?? "");
 
                 attempts++;
             }
@@ -265,14 +264,19 @@ namespace ComBot_Revamped
                 }
 
                 var hash = Convert.FromBase64String(cfg.hash);
+
                 cfg.hash = null;
 
+                // Yeah. I hope you don't need to be told this but you can't obtain a hash from a config that already has a hash
                 var shhhh = SHA512.HashData(JsonSerializer.SerializeToUtf8Bytes(cfg));
+
+                // Don't mutate state permanently.
+                cfg.hash = Convert.ToBase64String(hash);
 
                 if (!CryptographicOperations.FixedTimeEquals(shhhh, hash))
                 {
                     throw new IOException("Hash Invalid! Corruption likely");
-                }
+                } 
 
                 // Doesn't actually matter which encoding I use as long as it's internally consistent
                 var sltBytes = Convert.FromBase64String(cfg.salt);

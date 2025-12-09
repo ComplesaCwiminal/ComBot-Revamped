@@ -3,20 +3,22 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace ComBot_Revamped.Commands
 {
     internal static class CommandManager
     {
 
-        private static Action onInit;
-        private static Action onConsoleReady;
-        private static Action onPostRegister;
-        private static Action onExit;
-        private static Action onInteruption;
+        private static Action? onInit;
+        private static Action? onConsoleReady;
+        private static Action? onPostRegister;
+        private static Action? onExit;
+        private static Action? onInterruption;
 
         public static Dictionary<string, Command> CommandList { get; private set; } = new();
         public static Dictionary<Type, Command> CommandTypeLookup { get; private set; } = new();
@@ -38,12 +40,18 @@ namespace ComBot_Revamped.Commands
         public static void Init()
         {
             RegisterCommands();
-            onInit.Invoke();
+            if (onInit != null)
+            {
+                onInit.Invoke();
+            }
         }
 
         public static void ConsoleReady()
         {
-            onConsoleReady.Invoke();
+            if (onConsoleReady != null)
+            {
+                onConsoleReady.Invoke();
+            }
         }
         
         public static void OnExit()
@@ -75,13 +83,13 @@ namespace ComBot_Revamped.Commands
                         CommandList[alias.ToLower()] = cmd;
                     }
 
-                    // Register it's type for funsies
+                    // Register it's type for funsies (for the web interface)
                     CommandTypeLookup[type] = cmd;
 
 
                     // Hook the command into the action system.
                     onExit += cmd.OnExit;
-                    onInteruption += cmd.OnInterruption;
+                    onInterruption += cmd.OnInterruption;
                     onInit += cmd.Init;
                     onConsoleReady += cmd.ConsoleReady;
                     onPostRegister += cmd.PostRegister;
@@ -90,7 +98,10 @@ namespace ComBot_Revamped.Commands
                 }
             }
 
-            onPostRegister.Invoke();
+            if (onPostRegister != null)
+            {
+                onPostRegister.Invoke();
+            }
         }
         
         public static Command? GetCommand<T>()
@@ -104,9 +115,8 @@ namespace ComBot_Revamped.Commands
             return CommandList.ContainsKey(name) ? CommandList[name] : null;
         }
 
-        public static Task? RunCommand(string name, params string[] args)
+        public static Task? StartCommand(Command? command, params string[] args)
         {
-            var command = GetCommand(name);
 
             if (command != null)
             {
@@ -116,7 +126,7 @@ namespace ComBot_Revamped.Commands
                 {
                     _runningCommands.Add(tsk, command);
                 }
-                
+
                 tsk.ContinueWith(t => {
                     // While addition is synchronous removal is not, so make sure two can't remove at once
                     lock (_runningCommands)
@@ -131,7 +141,25 @@ namespace ComBot_Revamped.Commands
             return null;
         }
 
-        public static async void InteruptCommands()
+        public static Task? StartCommand(string name, params string[] args)
+        {
+            var command = GetCommand(name);
+
+            return StartCommand(command, args);
+        }
+
+        public static Task? StartCommand<T>(params string[] args)
+        {
+            var command = GetCommand<T>();
+
+            var modArgs = args.ToList();
+
+            modArgs.Insert(0, command != null ? command.Names[0] : "");
+
+            return StartCommand(command, modArgs.ToArray());
+        }
+
+        public static void InterruptCommands()
         {
             cts.Cancel();
 

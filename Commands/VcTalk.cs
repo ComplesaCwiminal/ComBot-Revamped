@@ -17,16 +17,15 @@ namespace ComBot_Revamped.Commands
 
         public override string[] Names { get; } = { "vctalk", "sendvoice" };
 
-        public override Dictionary<string, string> Arguments => new Dictionary<string, string> { { "guild", "GUILD" }, { "string", "The type of communication to be used" } };
+        public override Dictionary<string, string> Arguments => new Dictionary<string, string> { { "guild", "GUILD" } };
 
         public override string Description { get; } = "Sends audio of some variety in a vc";
 
         public override async Task Run(CancellationToken ct, params string[] args)
         {
-            if (args.Length < 3)
+            if (args.Length < 2)
             {
-                Console.WriteLine("Error: Too few arguments.");
-                return;
+                throw new ArgumentNullException("Too few arguments");
             }
 
             VoiceClient? vClient = VcManager.TryGetVoiceConnection(ulong.Parse(args[1]));
@@ -38,7 +37,7 @@ namespace ComBot_Revamped.Commands
                 var str = VcManager.GetOrCreateVCStream(ulong.Parse(args[1]));
             }else
             {
-                Console.WriteLine("No channel found");
+                throw new ArgumentException("Voice Channel is not valid");
             }
         }
     }

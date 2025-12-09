@@ -1,7 +1,12 @@
-﻿@page "/"
+﻿@using ComBot_Revamped.Components.Layout
+@page "/"
 
-<PageTitle>Login</PageTitle>
+@attribute [Authorize]
 
-<p>You need to login to use this!</p>
+<PageTitle>Bot</PageTitle>
 
-<p>Unfortunately I haven't completed this portion yet!</p>
+<AuthorizeView>
+    <Authorized>
+        <ChatBox />
+    </Authorized>
+</AuthorizeView>

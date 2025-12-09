@@ -1,8 +1,9 @@
-﻿<Router AppAssembly="typeof(WebApp).Assembly">
+﻿@using ComBot_Revamped.Components.Account.Shared
+@using ComBot_Revamped.Components.Layout
+<Router AppAssembly="typeof(WebApp).Assembly">
     <Found Context="routeData">
         <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)">
             <NotAuthorized>
-                <RedirectToLogin />
             </NotAuthorized>
         </AuthorizeRouteView>
         <FocusOnNavigate RouteData="routeData" Selector="h1" />
