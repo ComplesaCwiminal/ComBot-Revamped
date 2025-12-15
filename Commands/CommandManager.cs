@@ -1,9 +1,18 @@
-﻿using System;
+﻿using ComBot_Revamped.Components.Account;
+using ComBot_Revamped.Data;
+using ComBot_Revamped.Servers;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Identity;
+using NetCord.Gateway;
+using NetCord.Rest;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
@@ -35,11 +44,15 @@ namespace ComBot_Revamped.Commands
             }
         }
 
+        private static RestClient restClient;
+        private static GatewayClient client;
+
         static CancellationTokenSource cts = new();
 
-        public static void Init()
+        public static void Init(GatewayClient cl, RestClient rCl)
         {
-            RegisterCommands();
+            RegisterCommands(cl, rCl);
+
             if (onInit != null)
             {
                 onInit.Invoke();
@@ -62,7 +75,7 @@ namespace ComBot_Revamped.Commands
             }
         }
 
-        public static void RegisterCommands()
+        public static void RegisterCommands(GatewayClient gateway, RestClient rest)
         {
             // This gets every type in the entire program, and loops through them.
             foreach (var type in Assembly.GetExecutingAssembly().GetTypes())
@@ -93,6 +106,9 @@ namespace ComBot_Revamped.Commands
                     onInit += cmd.Init;
                     onConsoleReady += cmd.ConsoleReady;
                     onPostRegister += cmd.PostRegister;
+
+                    cmd.client = gateway;
+                    cmd.restClient = rest;
 
                     cmd.OnRegister();
                 }
@@ -157,6 +173,11 @@ namespace ComBot_Revamped.Commands
             modArgs.Insert(0, command != null ? command.Names[0] : "");
 
             return StartCommand(command, modArgs.ToArray());
+        }
+
+        public static Task? TryStartCommand(AuthenticationState user, Command command, params string[] args)
+        {
+            return StartCommand(command, args);
         }
 
         public static void InterruptCommands()

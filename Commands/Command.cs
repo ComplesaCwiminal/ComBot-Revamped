@@ -1,4 +1,6 @@
-﻿using System;
+﻿using NetCord.Gateway;
+using NetCord.Rest;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,6 +10,9 @@ namespace ComBot_Revamped.Commands
 {
     public abstract class Command
     {
+
+        public GatewayClient? client { get; set; }
+        public RestClient? restClient { get; set; }
 
         public abstract string[] Names
         {

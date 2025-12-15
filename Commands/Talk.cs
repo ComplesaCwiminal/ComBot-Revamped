@@ -34,7 +34,7 @@ namespace ComBot_Revamped
                         text += " " + argument;
                     }
             }
-                    await Program.restClient.SendMessageAsync(ulong.Parse(args[1]), new MessageProperties
+                    await restClient.SendMessageAsync(ulong.Parse(args[1]), new MessageProperties
                     {
                         Content = text
                     });

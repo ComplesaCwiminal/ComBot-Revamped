@@ -31,7 +31,7 @@ namespace ComBot_Revamped
         public static string[] arguments { get; internal set; }
         static string configFile = "Config.ini";
         // The amount of iterations for our pkbdf2
-        static int hashIterations = 65536;
+        static int hashIterations = 1048576;
 
         // Used to make swapping how I choose to make password input easier.
         static Func<int, Config?, (string?, Config?)>? passwordProvider;
@@ -133,7 +133,6 @@ namespace ComBot_Revamped
             return (null, null);
         }
 
-        // Run this as a thread. It's infinitely blocking.
         static async Task CommandHandler(CancellationToken disconnectionToken)
         {
             while (!disconnectionToken.IsCancellationRequested)
@@ -205,9 +204,6 @@ namespace ComBot_Revamped
 
             if (success)
             {
-                var pageTask = Task.Run(() => WebApp.Run(arguments));
-
-                CommandManager.Init();
 
                 var builder = Host.CreateApplicationBuilder();
 
@@ -227,11 +223,15 @@ namespace ComBot_Revamped
                 restClient = host.Services.GetService(typeof(RestClient)) as RestClient;
 
                 client.Ready += ClientReady;
+                client.MessageCreate += MessageCreate;
 
                 await host.StartAsync();
 
-
                 token = null;
+
+                CommandManager.Init(client, restClient);
+
+                var pageTask = Task.Run(() => WebApp.Run(arguments));
 
                 await Task.Delay(-1);
             }
@@ -241,14 +241,19 @@ namespace ComBot_Revamped
             }
         }
 
-        static async private ValueTask ClientReady(ReadyEventArgs args)
+        private static async ValueTask MessageCreate(Message arg)
+        {
+
+        }
+
+        private static async ValueTask ClientReady(ReadyEventArgs args)
         {
             if (firstConnect)
             {
                 firstConnect = false;
                 StyleUtils.resetStyle();
                 // Don't await this. It's infinite.
-                var commandHandler = Task.Run(() => CommandHandler(disconnectCanceller.Token));
+                var commandHandler = CommandHandler(disconnectCanceller.Token);
             }
         }
 
@@ -285,9 +290,6 @@ namespace ComBot_Revamped
                 var tokenCipherBytes = Convert.FromBase64String(cfg.token);
                 var cipherTagBytes = Convert.FromBase64String(cfg.tag);
                 
-                // Potentially consider playing with the iteration number or the hash algorithm.
-                // I left the password as a string as if byte[] conversion isn't constant time, then you could figure out the password length externally
-                // However our salt's size isn't a secret.
                 var passwordHash = (Rfc2898DeriveBytes.Pbkdf2(password, sltBytes, hashIterations, HashAlgorithmName.SHA512, 32));
 
                 if (CryptographicOperations.FixedTimeEquals(passwordHash, pwBytes))
@@ -305,6 +307,11 @@ namespace ComBot_Revamped
             }
 
             return (true, cfg.token);
+        }
+
+        public static IAsyncEnumerable<RestMessage> GetChannelMessage(ulong channel)
+        {
+            return restClient.GetMessagesAsync(channel);
         }
     }
 }

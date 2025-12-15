@@ -1,24 +1,53 @@
 ﻿@using ComBot_Revamped.Commands
 @using System.ComponentModel.DataAnnotations
+@using NetCord.Gateway
+@using NetCord.Rest
+
+@rendermode InteractiveServer
+
 <div class="form h-100 d-flex flex-column-reverse">
     <div class="w-100">
+        <button @onclick="() => { selectedChannel = 12345; }">wasd</button>
         <EditForm Model="Message" method="post" FormName="sendMessage" OnValidSubmit="OnSubmitText" class="flex-row d-flex w-100">
             <InputText class="rounded form-floating form-control mr-4 w-100" @bind-Value="Message.Text" id="Message.Text" placeholder="Type text to message..." autocomplete="off"></InputText>
-            <button class="btn btn-primary" type="submit">Send</button>
+
+            @if (selectedChannel == null) {
+                <button class="btn btn-primary" type="submit" disabled>Send</button>
+            } else
+            {
+                <button class="btn btn-primary" type="submit">Send</button>
+            }
         </EditForm>
     </div>
 </div>
 
 @code {
+    private List<RestMessage> loadedMessages = new();
+
+    private ulong? selectedChannel;
+    private ulong? selectedGuild;
+
     [SupplyParameterFromForm]
-    private UserMessage Message { get; set; } = new();
+    private SendingMessage Message { get; set; } = new();
 
     private void OnSubmitText()
     {
         CommandManager.StartCommand<Talk>("1256129744206827550", Message.Text);
     }
 
-    private sealed class UserMessage
+
+    private void SelectChannel(ulong id)
+    {
+
+    }
+
+    private void selectGuild(ulong id)
+    {
+
+    }
+
+
+    private sealed class SendingMessage
     {
         [Required]
         public string Text { get; set; } = "";

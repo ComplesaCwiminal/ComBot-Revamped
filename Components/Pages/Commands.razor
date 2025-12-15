@@ -8,48 +8,54 @@
 
 <PageTitle>Commands</PageTitle>
 
-@if (selectedCommand == null)
-{
-    <h1 class="border-bottom">Commands</h1>
-    <div class="d-flex flex-row flex-wrap">
-        @foreach (var command in CommandManager.CommandTypeLookup)
+<AuthorizeView>
+    <ChildContent Context="authCtx">
+        @if (selectedCommand == null)
         {
-            <button class="btn btn-secondary m-1" @onclick="() => { SelectCommand(command.Value); }">
-                @command.Value.Names[0]
-            </button>
-        }
-    </div>
-}
-else
-{
-    <div>
-        <button class="btn btn-secondary mb-2" @onclick="() => { SelectCommand(null); }">Back</button>
-        @if(caughtException != null)
-        {
-            <div class="alert-danger alert">
-                <b>ERROR:</b>
-                <p>@caughtException</p>
+            <h1 class="border-bottom">Commands</h1>
+            <div class="d-flex flex-row flex-wrap">
+                @foreach (var command in CommandManager.CommandTypeLookup)
+                {
+                    <button class="btn btn-secondary m-1" @onclick="() => { SelectCommand(command.Value); }">
+                        @command.Value.Names[0]
+                    </button>
+                }
             </div>
         }
-
-        <p>COMMAND SELECTED: @selectedCommand.Names[0]</p>
-
-        <EditForm class="align-bottom " Model="args" method="post" FormName="commandForm" OnValidSubmit="SubmitCommand">
-        @for(int i = 0; i < selectedCommand.Arguments.Count; i++)
+        else
         {
-                var b = i;
-                <InputText @bind-Value="args[b]" class="rounded form-floating form-control w-100 mb-2" placeholder="@selectedCommand.Arguments.Values.ToArray()[i]"></InputText>
+            <div>
+                <button class="btn btn-secondary mb-2" @onclick="() => { SelectCommand(null); }">Back</button>
+                @if(caughtException != null)
+                {
+                    <div class="alert-danger alert">
+                        <b>ERROR:</b>
+                        <p>@caughtException</p>
+                    </div>
+                }
+
+                <p>COMMAND SELECTED: @selectedCommand.Names[0]</p>
+
+                <EditForm class="align-bottom " Model="args" method="post" FormName="commandForm" OnValidSubmit="async () => { await SubmitCommand(authCtx); }">
+                @for(int i = 0; i < selectedCommand.Arguments.Count; i++)
+                {
+                        var b = i;
+                        <InputText @bind-Value="args[b]" class="rounded form-floating form-control w-100 mb-2" placeholder="@selectedCommand.Arguments.Values.ToArray()[i]"></InputText>
+                }
+                    <button class="btn btn-primary w-100" type="submit">SEND COMMAND</button>
+                </EditForm>
+            </div>
         }
-            <button class="btn btn-primary w-100" type="submit">SEND COMMAND</button>
-        </EditForm>
-    </div>
-}
+    </ChildContent>
+</AuthorizeView>
+
 
 @code {
     private Command? selectedCommand { get; set;}
     internal Exception? caughtException { private get; set; }
 
-    // Normal idiom? Unclear... unikely
+    // Normal idiom? Unclear... unlikely
+        // It works tho.
     [SupplyParameterFromForm]
     private string[] args { get; set; } = new string[0];
 
@@ -61,7 +67,7 @@ else
         caughtException = null;
     }
 
-    private async void SubmitCommand()
+    private async Task SubmitCommand(AuthenticationState auth)
     {
         // Set the caught exception to null to reset state 
         caughtException = null;
@@ -73,20 +79,20 @@ else
         var argList = args.ToList();
         argList.Insert(0, cmdName);
 
-        var task = CommandManager.StartCommand(selectedCommand, argList.ToArray());
-        if (task != null) {
-            try {
-                await task;
-            } catch(Exception e)
-            {
-                caughtException = e;
-            }
+        try
+        {
+            var task = CommandManager.TryStartCommand(auth, selectedCommand, argList.ToArray());
 
-            // Don't go back a menu if something went wrong
-            if (caughtException == null)
-            {
-                SelectCommand(null);
-            }
+            await task;
+        } catch(Exception e)
+        {
+            caughtException = e;
+        }
+
+        // Don't go back a menu if something went wrong
+        if (caughtException == null)
+        {
+            SelectCommand(null);
         }
     }
 }

@@ -1,4 +1,7 @@
 ﻿@using ComBot_Revamped.Components.Layout
+
+@inject NavigationManager navigationManager
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -15,11 +18,14 @@
 </head>
 
 <body>
-    <AuthorizeView>
-        <NotAuthorized>
-            <LoginPanel></LoginPanel>
+    @if(!navigationManager.ToBaseRelativePath(navigationManager.Uri).StartsWith("Account/")) {
+        <AuthorizeView>
+            <NotAuthorized>
+            <LgnPanel>
+            </LgnPanel>
         </NotAuthorized>
     </AuthorizeView>
+    }
 
     <Routes />
     <script src="_framework/blazor.web.js"></script>

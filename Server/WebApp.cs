@@ -13,6 +13,9 @@ namespace ComBot_Revamped.Servers
 {
     public class WebApp
     {
+        public static WebApplication? app;
+
+
         public static void Run(string[] args)
         {
             Console.WriteLine("Starting the web portion!");
@@ -54,7 +57,7 @@ namespace ComBot_Revamped.Servers
             });
             */
 
-            var app = builder.Build();
+            app = builder.Build();
 
 
 
