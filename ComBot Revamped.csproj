@@ -11,23 +11,23 @@
 
   <ItemGroup>
     <PackageReference Include="libsodium" Version="1.0.20.1" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.QuickGrid.EntityFrameworkAdapter" Version="9.0.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="9.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.QuickGrid.EntityFrameworkAdapter" Version="9.0.11" />
+    <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="9.0.11" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.11" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.11" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.3" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.0">
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.11" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.11" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.11">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="9.0.0" />
-    <PackageReference Include="NetCord" Version="1.0.0-alpha.450" />
-    <PackageReference Include="NetCord.Hosting" Version="1.0.0-alpha.450" />
-    <PackageReference Include="NetCord.Hosting.AspNetCore" Version="1.0.0-alpha.450" />
-    <PackageReference Include="NetCord.Hosting.Services" Version="1.0.0-alpha.450" />
-    <PackageReference Include="NetCord.Services" Version="1.0.0-alpha.450" />
+    <PackageReference Include="NetCord" Version="1.0.0-alpha.451" />
+    <PackageReference Include="NetCord.Hosting" Version="1.0.0-alpha.451" />
+    <PackageReference Include="NetCord.Hosting.AspNetCore" Version="1.0.0-alpha.451" />
+    <PackageReference Include="NetCord.Hosting.Services" Version="1.0.0-alpha.451" />
+    <PackageReference Include="NetCord.Services" Version="1.0.0-alpha.451" />
   </ItemGroup>
 
 </Project>

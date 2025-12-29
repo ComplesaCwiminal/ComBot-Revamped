@@ -1,6 +1,7 @@
 ﻿using NetCord;
 using NetCord.Gateway;
 using NetCord.Gateway.Voice;
+using NetCord.Rest;
 using System;
 using System.Collections.Generic;
 using System.Linq;

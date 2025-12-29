@@ -16,7 +16,7 @@
             <div class="d-flex flex-row flex-wrap">
                 @foreach (var command in CommandManager.CommandTypeLookup)
                 {
-                    <button class="btn btn-secondary m-1" @onclick="() => { SelectCommand(command.Value); }">
+                    <button title="@command.Value.Description" class="btn btn-secondary m-1" @onclick="() => { SelectCommand(command.Value); }">
                         @command.Value.Names[0]
                     </button>
                 }
@@ -63,6 +63,7 @@
     {
         selectedCommand = cmd;
         args = new string[cmd != null ? cmd.Arguments.Count : 0];
+
         // If you just changed the command; You can't have caught an exception from it.
         caughtException = null;
     }
@@ -81,7 +82,7 @@
 
         try
         {
-            var task = CommandManager.TryStartCommand(auth, selectedCommand, argList.ToArray());
+            var task = CommandManager.StartCommand(selectedCommand, argList.ToArray());
 
             await task;
         } catch(Exception e)

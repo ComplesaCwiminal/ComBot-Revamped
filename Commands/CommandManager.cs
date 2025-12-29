@@ -1,25 +1,12 @@
-﻿using ComBot_Revamped.Components.Account;
-using ComBot_Revamped.Data;
-using ComBot_Revamped.Servers;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Components.Authorization;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Components.Authorization;
 using NetCord.Gateway;
 using NetCord.Rest;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Security.Claims;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace ComBot_Revamped.Commands
 {
+
     internal static class CommandManager
     {
 
@@ -51,7 +38,10 @@ namespace ComBot_Revamped.Commands
 
         public static void Init(GatewayClient cl, RestClient rCl)
         {
-            RegisterCommands(cl, rCl);
+            restClient = rCl;
+            client = cl;
+
+            RegisterCommands(); 
 
             if (onInit != null)
             {
@@ -75,8 +65,14 @@ namespace ComBot_Revamped.Commands
             }
         }
 
-        public static void RegisterCommands(GatewayClient gateway, RestClient rest)
+        public static void UpdateCommands(bool fromScratch = false) 
         {
+            if(fromScratch)
+            {
+                CommandList.Clear();
+                CommandTypeLookup.Clear();
+            }
+
             // This gets every type in the entire program, and loops through them.
             foreach (var type in Assembly.GetExecutingAssembly().GetTypes())
             {
@@ -100,6 +96,9 @@ namespace ComBot_Revamped.Commands
                     CommandTypeLookup[type] = cmd;
 
 
+                    cmd.client = client;
+                    cmd.restClient = restClient;
+
                     // Hook the command into the action system.
                     onExit += cmd.OnExit;
                     onInterruption += cmd.OnInterruption;
@@ -107,13 +106,16 @@ namespace ComBot_Revamped.Commands
                     onConsoleReady += cmd.ConsoleReady;
                     onPostRegister += cmd.PostRegister;
 
-                    cmd.client = gateway;
-                    cmd.restClient = rest;
 
                     cmd.OnRegister();
                 }
             }
+        }
+        public static void RegisterCommands()
+        {
+            UpdateCommands();
 
+            // Check if the post register hook isn't null, and if not, invoke it.
             if (onPostRegister != null)
             {
                 onPostRegister.Invoke();
@@ -175,10 +177,11 @@ namespace ComBot_Revamped.Commands
             return StartCommand(command, modArgs.ToArray());
         }
 
+        /*
         public static Task? TryStartCommand(AuthenticationState user, Command command, params string[] args)
         {
             return StartCommand(command, args);
-        }
+        }*/
 
         public static void InterruptCommands()
         {
@@ -190,4 +193,5 @@ namespace ComBot_Revamped.Commands
             }
         }
     }
+
 }

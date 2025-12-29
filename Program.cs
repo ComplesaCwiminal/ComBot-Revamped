@@ -1,12 +1,16 @@
 ﻿using ComBot_Revamped.Commands;
 using ComBot_Revamped.Servers;
 using ComBot_Revamped.Voice;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using NetCord;
 using NetCord.Gateway;
 using NetCord.Hosting.Gateway;
 using NetCord.Hosting.Rest;
+using NetCord.Hosting.Services;
+using NetCord.Hosting.Services.ApplicationCommands;
+using NetCord.Services.ApplicationCommands;
 using NetCord.Logging;
 using NetCord.Rest;
 using System;
@@ -23,12 +27,13 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using System.Xml.Serialization;
 using static NetCord.Rest.GuildMessageSearchResult;
+using ComBot_Revamped.Data;
 
 namespace ComBot_Revamped
 {
     static internal class Program
     {
-        public static string[] arguments { get; internal set; }
+        public static string[]? arguments { get; internal set; }
         static string configFile = "Config.ini";
         // The amount of iterations for our pkbdf2
         static int hashIterations = 1048576;
@@ -43,7 +48,7 @@ namespace ComBot_Revamped
 
         static bool firstConnect = true;
 
-        static async Task Main(string[] args)
+        static async Task Main(string[]? args)
         {
             arguments = args;
             AppDomain.CurrentDomain.ProcessExit += CurrentDomain_ProcessExit;
@@ -58,6 +63,7 @@ namespace ComBot_Revamped
         {
             VcManager.PreDisconnect();
             CommandManager.OnExit();
+            PointsDb.Save();
         }
 
         private static (string?, Config?) passwordFallback(int state, Config cfg)
@@ -163,7 +169,7 @@ namespace ComBot_Revamped
             }
         }
 
-        static async Task RunBotAsync(string[] args)
+        static async Task RunBotAsync(string[]? args)
         {
             string? result = null;
             Config? configObj = null;
@@ -205,34 +211,38 @@ namespace ComBot_Revamped
             if (success)
             {
 
-                var builder = Host.CreateApplicationBuilder();
+                var builder = Host.CreateApplicationBuilder(args);
 
                 builder.Services.AddDiscordGateway(options =>
                 {
                     options.Intents = GatewayIntents.All;
                     options.Token = token;
-
-                }).AddDiscordRest(options =>
-                {
-                    options.Token = token;
-                });
+                })
+                    .AddApplicationCommands()
+                    .AddGatewayHandlers(typeof(Program).Assembly);
 
                 var host = builder.Build();
 
-                client = host.Services.GetService(typeof(GatewayClient)) as GatewayClient;
-                restClient = host.Services.GetService(typeof(RestClient)) as RestClient;
+                host.AddModules(typeof(Program).Assembly);
 
-                client.Ready += ClientReady;
-                client.MessageCreate += MessageCreate;
+                // Shared to all modules. Beware of concurrency.
+                client = (GatewayClient)host.Services.GetRequiredService(typeof(GatewayClient));
+                restClient = (RestClient)host.Services.GetRequiredService(typeof(RestClient));
 
                 await host.StartAsync();
 
+                // GC would remove this on it's own, but it's better to be explicit.
                 token = null;
 
+                // Initialize or run any external nice to haves.
+                PointsDb.Init();
                 CommandManager.Init(client, restClient);
+                WebApp.Run(args);
 
-                var pageTask = Task.Run(() => WebApp.Run(arguments));
+                // Don't await this. It's infinite.
+                var commandHandler = CommandHandler(disconnectCanceller.Token);
 
+                // Task.Delay? Again? Kids these days.
                 await Task.Delay(-1);
             }
             else
@@ -241,20 +251,14 @@ namespace ComBot_Revamped
             }
         }
 
-        private static async ValueTask MessageCreate(Message arg)
-        {
-
-        }
-
-        private static async ValueTask ClientReady(ReadyEventArgs args)
+        private static ValueTask ClientReady(ReadyEventArgs args)
         {
             if (firstConnect)
             {
                 firstConnect = false;
-                StyleUtils.resetStyle();
-                // Don't await this. It's infinite.
-                var commandHandler = CommandHandler(disconnectCanceller.Token);
             }
+
+            return default;
         }
 
         public static (bool success, string token) TryBotLogin(Config cfg, string password)
@@ -309,9 +313,9 @@ namespace ComBot_Revamped
             return (true, cfg.token);
         }
 
-        public static IAsyncEnumerable<RestMessage> GetChannelMessage(ulong channel)
+        public static IAsyncEnumerable<Message> GetChannelMessage(ulong channel)
         {
-            return restClient.GetMessagesAsync(channel);
+            return (IAsyncEnumerable<Message>)restClient.GetMessagesAsync(channel);
         }
     }
 }

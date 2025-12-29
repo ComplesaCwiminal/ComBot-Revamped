@@ -5,6 +5,12 @@
       "resourceId": null,
       "type": "sqlite.local",
       "connectionId": "ConnectionStrings:DatabaseConnection"
+    },
+    "sqlite2": {
+      "secretStore": "LocalSecretsFile",
+      "type": "sqlite.local",
+      "connectionId": "ConnectionStrings:PointsDatabase",
+      "dynamicId": null
     }
   }
 }

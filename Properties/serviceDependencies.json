@@ -3,6 +3,11 @@
     "sqlite1": {
       "type": "sqlite",
       "connectionId": "ConnectionStrings:DatabaseConnection"
+    },
+    "sqlite2": {
+      "type": "sqlite",
+      "connectionId": "ConnectionStrings:PointsDatabase",
+      "dynamicId": null
     }
   }
 }

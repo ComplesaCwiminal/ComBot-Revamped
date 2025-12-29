@@ -5,6 +5,7 @@
 
 @rendermode InteractiveServer
 
+<h1>This page is still in rework. Please wait.</h1>
 <div class="form h-100 d-flex flex-column-reverse">
     <div class="w-100">
         <button @onclick="() => { selectedChannel = 12345; }">wasd</button>
@@ -22,13 +23,33 @@
 </div>
 
 @code {
-    private List<RestMessage> loadedMessages = new();
+    [Parameter(CaptureUnmatchedValues = true)]
+    public IDictionary<string, object>? AdditionalAttributes { get; set; }
+
+    private List<Message> loadedMessages = new();
 
     private ulong? selectedChannel;
     private ulong? selectedGuild;
 
     [SupplyParameterFromForm]
     private SendingMessage Message { get; set; } = new();
+
+    protected override void OnInitialized()
+    {
+        Program.client.MessageCreate += OnMessageGetAsync;
+
+        if(AdditionalAttributes == null)
+        {
+        }
+    }
+
+    private async ValueTask OnMessageGetAsync(Message msg)
+    {
+        if(selectedChannel == msg.ChannelId)
+        {
+            loadedMessages.Add(msg);
+        }
+    }
 
     private void OnSubmitText()
     {
@@ -38,7 +59,10 @@
 
     private void SelectChannel(ulong id)
     {
+        selectedChannel = id;
 
+        loadedMessages.Clear();
+        loadedMessages.Concat(Program.GetChannelMessage(id).ToBlockingEnumerable());
     }
 
     private void selectGuild(ulong id)
